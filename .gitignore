@@ -16,3 +16,5 @@ glide.yaml
 
 src
 pkg
+morph.dict
+dict.opcorpora.xml

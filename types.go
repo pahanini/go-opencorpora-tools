@@ -2,14 +2,23 @@ package opencorpora
 
 // Grammeme represents opencorpora grammeme
 type Grammeme struct {
-	ID          string `xml:"name"`
-	ParentID    string `xml:"parent,attr"`
-	Alias       string `xml:"alias"`
+	Name        string `xml:"name"`
 	Description string `xml:"description"`
 }
 
-// GrammemeID represents ID of grammeme in lemmas
-type GrammemeID struct {
+// Tag is a slice of grammeme
+type Tag []*Grammeme
+
+// Meta keeps WF metadata
+type Meta struct {
+	NWFIndex int
+	Tag      Tag
+}
+
+// --- parser types are only require for xml parse ---
+
+// GrammemeName represents name of grammeme in lemmas
+type GrammemeName struct {
 	Value string `xml:"v,attr"`
 }
 
@@ -23,6 +32,6 @@ type Lemma struct {
 
 // Form represents lemma form
 type Form struct {
-	Value       string       `xml:"t,attr"`
-	GrammemeIDs []GrammemeID `xml:"g"`
+	Value         string         `xml:"t,attr"`
+	GrammemeNames []GrammemeName `xml:"g"`
 }
