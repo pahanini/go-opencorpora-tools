@@ -7,12 +7,11 @@ type Grammeme struct {
 }
 
 // Tag is a slice of grammeme
-type Tag []*Grammeme
+type Tag []Grammeme
 
 // Meta keeps WF metadata
 type Meta struct {
-	NWFIndex int
-	Tag      Tag
+	GrammemeIndexes []int8
 }
 
 // --- parser types are only require for xml parse ---

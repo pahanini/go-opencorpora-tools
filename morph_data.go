@@ -1,19 +1,34 @@
 package opencorpora
 
 import (
+	"compress/bzip2"
 	"encoding/gob"
 	"encoding/xml"
 	"github.com/pahanini/mafsa"
 	"io"
+	"net/http"
 	"os"
 	"sort"
 )
+
+const dictURL = "http://opencorpora.org/files/export/dict/dict.opcorpora.xml.bz2"
 
 // MorphData is a struct to encode and save
 type MorphData struct {
 	Tree  []byte
 	Tag   Tag
 	Metas []Meta
+}
+
+// ImportFromWeb imports data from opencorpora site
+func (d *MorphData) ImportFromWeb() (err error) {
+	resp, err := http.Get(dictURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	bz2 := bzip2.NewReader(resp.Body)
+	return d.ImportFromReader(bz2)
 }
 
 // ImportFromXMLFile reads XML file  and saves in MorphData
@@ -52,8 +67,8 @@ func (d *MorphData) ImportFromReader(r io.Reader) (err error) {
 				if err = decoder.DecodeElement(&g, &se); err != nil {
 					return err
 				}
-				d.Tag = append(d.Tag, &g)
-				tm[g.Name] = &g
+				d.Tag = append(d.Tag, g)
+				tm[g.Name] = len(d.Tag) - 1
 			}
 			// generate all wordForms from lemma
 			if se.Name.Local == "lemma" {
@@ -92,15 +107,31 @@ func (d *MorphData) Save(fp string) error {
 	return d.writeMorphData(f)
 }
 
+// Load loads MorphData from file
+func (d *MorphData) Load(fp string) error {
+	f, err := os.Open(fp)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return d.readMorphData(f)
+}
+
 // writeMorphData creates, encodes and writes MorphData to a io.Writer
 func (d *MorphData) writeMorphData(w io.Writer) (err error) {
-	encoder := gob.NewEncoder(w)
-	return encoder.Encode(d)
+	g := gob.NewEncoder(w)
+	return g.Encode(d)
+}
+
+// readMorphData reads, decodes and saves MorphData from a io.Reader
+func (d *MorphData) readMorphData(r io.Reader) (err error) {
+	g := gob.NewDecoder(r)
+	return g.Decode(d)
 }
 
 // --- internal data structs ----
 
-type tagMap map[string]*Grammeme
+type tagMap map[string]int
 
 type wordForm struct {
 	word string
@@ -113,8 +144,8 @@ func newWordForm(f Form, tm tagMap) wordForm {
 		meta: Meta{},
 	}
 	for _, n := range f.GrammemeNames {
-		if g, ok := tm[n.Value]; ok {
-			wf.meta.Tag = append(wf.meta.Tag, g)
+		if grammemeIndex, ok := tm[n.Value]; ok {
+			wf.meta.GrammemeIndexes = append(wf.meta.GrammemeIndexes, int8(grammemeIndex))
 		}
 	}
 	return wf

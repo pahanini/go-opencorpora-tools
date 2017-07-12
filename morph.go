@@ -1,12 +1,8 @@
 package opencorpora
 
 import (
-	"encoding/gob"
 	"errors"
 	"github.com/pahanini/mafsa"
-	"io"
-	"os"
-	"path/filepath"
 )
 
 // ErrWordNotFound returned if word not found in dict
@@ -22,8 +18,14 @@ type Morph struct {
 // LoadMorph loads morph from file
 func LoadMorph(fp string) (*Morph, error) {
 	m := NewMorph()
-	err := m.Load(fp)
-	return m, err
+	d := MorphData{}
+	if err := d.Load(fp); err != nil {
+		return nil, err
+	}
+	if err := m.readMorphData(&d); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // NewMorph creates new Morph instance
@@ -34,34 +36,14 @@ func NewMorph() *Morph {
 // Tag returns word's tag or nil if word not found
 func (m *Morph) Tag(word string) (Tag, error) {
 	_, index := m.tree.IndexedTraverse([]rune(word))
-	if index <= 1 {
-		return Tag{}, ErrWordNotFound
+	tag := Tag{}
+	if index < 1 {
+		return tag, ErrWordNotFound
 	}
-	return m.metas[index].Tag, nil
-}
-
-// Load reads and decodes file with specified filepath
-func (m *Morph) Load(fp string) error {
-	fp, err := filepath.Abs(fp)
-	if err != nil {
-		return err
+	for _, grammemeIndex := range m.metas[index-1].GrammemeIndexes {
+		tag = append(tag, m.tag[grammemeIndex])
 	}
-	f, err := os.Open(fp)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return m.read(f)
-}
-
-// read reads and decodes MorphData from reader
-func (m *Morph) read(r io.Reader) (err error) {
-	var md MorphData
-	decoder := gob.NewDecoder(r)
-	if err := decoder.Decode(&md); err != nil {
-		return err
-	}
-	return m.readMorphData(&md)
+	return tag, nil
 }
 
 // readMorphData reads data from *MorphData struct and saves in Morph

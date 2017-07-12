@@ -7,8 +7,7 @@ import (
 var m *Morph
 
 func init() {
-	m = NewMorph()
-	m.Load("morph.dict")
+	m, _ = LoadMorph("morph.dict")
 }
 
 func BenchmarkMe(b *testing.B) {

@@ -49,8 +49,8 @@ func TestMorth(t *testing.T) {
 	err = m.readMorphData(d)
 	require.NoError(t, err)
 
-	tag, err := m.Tag("ёж")
+	tag, err := m.Tag("ежа")
 	require.NoError(t, err)
-	require.Len(t, tag, 1)
-	require.Equal(t, "NOUN", tag[0].Name)
+	require.Len(t, tag, 2)
+	require.Equal(t, "POST", tag[0].Name)
 }
