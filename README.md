@@ -12,15 +12,32 @@ opencorpora.org. Перед использованием исходный сло
 
 Пример получения тэга слова:
 ```go
-  m := LoadMorph("morph.dict")
-  tag, err := m.Tag("морфология")
+package main
+
+import (
+  "fmt"
+  "github.com/pahanini/go-opencorpora-tools"
+)
+
+func main() {
+  m, _ := opencorpora.LoadMorph("morph.dict")
+  tag, _ := m.Tag("морфология")
+  fmt.Println(tag)
+  /*
+  => [
+      {femn женский род}
+      {sing единственное число}
+      {ablt творительный падеж}
+     ]
+  */
+}
 ```
 
 Создание файла словаря по данным opencorpora.org. Данная операция на MacBook Pro
 занимает примерно 1 минуту.
 
 ```go
-  d := NewMorphData()
+  d := opencorpora.MorphData{}
   d.ImportFromXMLFile("dict.opcorpora.xml")
   d.Save("morph.dict")  
 ```
