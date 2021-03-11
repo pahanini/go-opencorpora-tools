@@ -4,11 +4,12 @@ import (
 	"compress/bzip2"
 	"encoding/gob"
 	"encoding/xml"
-	"github.com/pahanini/mafsa"
 	"io"
 	"net/http"
 	"os"
 	"sort"
+
+	"github.com/pahanini/mafsa"
 )
 
 const dictURL = "http://opencorpora.org/files/export/dict/dict.opcorpora.xml.bz2"
@@ -17,7 +18,7 @@ const dictURL = "http://opencorpora.org/files/export/dict/dict.opcorpora.xml.bz2
 type MorphData struct {
 	Tree  []byte
 	Tag   Tag
-	Metas []Meta
+	Metas [][]Meta
 }
 
 // ImportFromWeb imports data from opencorpora site
@@ -44,7 +45,7 @@ func (d *MorphData) ImportFromXMLFile(fp string) (err error) {
 func (d *MorphData) ImportFromReader(r io.Reader) (err error) {
 	decoder := xml.NewDecoder(r)
 	d.Tag = Tag{}
-	d.Metas = []Meta{}
+	d.Metas = [][]Meta{}
 
 	// ww temporary keeps all dict before add
 	// it to d.buildTree, tm associates tag names with Grammemes
@@ -76,8 +77,8 @@ func (d *MorphData) ImportFromReader(r io.Reader) (err error) {
 				if err = decoder.DecodeElement(&l, &se); err != nil {
 					return err
 				}
-				ww = append(ww, newWordForm(l.Main, tm))
 				for _, f := range l.Forms {
+					f.GrammemeNames = append(l.Main.GrammemeNames, f.GrammemeNames...)
 					ww = append(ww, newWordForm(f, tm))
 				}
 			}
@@ -87,10 +88,14 @@ func (d *MorphData) ImportFromReader(r io.Reader) (err error) {
 	bt := mafsa.New()
 	sort.Sort(ww)
 	for _, w := range ww {
-		if err = bt.Insert(w.word); err != nil {
-			return err
+		if !bt.Contains(w.word) {
+			if err = bt.Insert(w.word); err != nil {
+				return err
+			}
+			d.Metas = append(d.Metas, []Meta{w.meta})
+		} else {
+			d.Metas[len(d.Metas)-1] = append(d.Metas[len(d.Metas)-1], w.meta)
 		}
-		d.Metas = append(d.Metas, w.meta)
 	}
 	bt.Finish()
 	d.Tree, err = bt.MarshalBinary()

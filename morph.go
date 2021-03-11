@@ -2,6 +2,7 @@ package opencorpora
 
 import (
 	"errors"
+
 	"github.com/pahanini/mafsa"
 )
 
@@ -11,7 +12,7 @@ var ErrWordNotFound = errors.New("word not found")
 // Morph is a morphological dict based at opencorpora data
 type Morph struct {
 	tag   Tag
-	metas []Meta
+	metas [][]Meta
 	tree  *mafsa.MinTree
 }
 
@@ -30,20 +31,24 @@ func LoadMorph(fp string) (*Morph, error) {
 
 // NewMorph creates new Morph instance
 func NewMorph() *Morph {
-	return &Morph{Tag{}, []Meta{}, nil}
+	return &Morph{Tag{}, [][]Meta{}, nil}
 }
 
-// Tag returns word's tag or nil if word not found
-func (m *Morph) Tag(word string) (Tag, error) {
+// Tag returns word's tags or nil if word not found
+func (m *Morph) Tag(word string) ([]Tag, error) {
 	_, index := m.tree.IndexedTraverse([]rune(word))
-	tag := Tag{}
+	tags := []Tag{}
 	if index < 1 {
-		return tag, ErrWordNotFound
+		return tags, ErrWordNotFound
 	}
-	for _, grammemeIndex := range m.metas[index-1].GrammemeIndexes {
-		tag = append(tag, m.tag[grammemeIndex])
+	for _, meta := range m.metas[index-1] {
+		tag := Tag{}
+		for _, grammemeIndex := range meta.GrammemeIndexes {
+			tag = append(tag, m.tag[grammemeIndex])
+		}
+		tags = append(tags, tag)
 	}
-	return tag, nil
+	return tags, nil
 }
 
 // readMorphData reads data from *MorphData struct and saves in Morph
