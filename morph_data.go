@@ -109,7 +109,7 @@ func (d *MorphData) Save(fp string) error {
 		return err
 	}
 	defer f.Close()
-	return d.writeMorphData(f)
+	return d.WriteMorphData(f)
 }
 
 // Load loads MorphData from file
@@ -119,17 +119,17 @@ func (d *MorphData) Load(fp string) error {
 		return err
 	}
 	defer f.Close()
-	return d.readMorphData(f)
+	return d.ReadMorphData(f)
 }
 
-// writeMorphData creates, encodes and writes MorphData to a io.Writer
-func (d *MorphData) writeMorphData(w io.Writer) (err error) {
+// WriteMorphData creates, encodes and writes MorphData to a io.Writer
+func (d *MorphData) WriteMorphData(w io.Writer) (err error) {
 	g := gob.NewEncoder(w)
 	return g.Encode(d)
 }
 
-// readMorphData reads, decodes and saves MorphData from a io.Reader
-func (d *MorphData) readMorphData(r io.Reader) (err error) {
+// ReadMorphData reads, decodes and saves MorphData from a io.Reader
+func (d *MorphData) ReadMorphData(r io.Reader) (err error) {
 	g := gob.NewDecoder(r)
 	return g.Decode(d)
 }
