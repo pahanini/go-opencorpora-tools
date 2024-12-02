@@ -23,7 +23,7 @@ func LoadMorph(fp string) (*Morph, error) {
 	if err := d.Load(fp); err != nil {
 		return nil, err
 	}
-	if err := m.readMorphData(&d); err != nil {
+	if err := m.ReadMorphData(&d); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -51,8 +51,8 @@ func (m *Morph) Tag(word string) ([]Tag, error) {
 	return tags, nil
 }
 
-// readMorphData reads data from *MorphData struct and saves in Morph
-func (m *Morph) readMorphData(md *MorphData) (err error) {
+// ReadMorphData reads data from *MorphData struct and saves in Morph
+func (m *Morph) ReadMorphData(md *MorphData) (err error) {
 	m.tag = md.Tag
 	m.metas = md.Metas
 	m.tree, err = new(mafsa.Decoder).Decode(md.Tree)
