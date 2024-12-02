@@ -74,7 +74,7 @@ func TestMorth(t *testing.T) {
 	require.NoError(t, err)
 
 	m := NewMorph()
-	err = m.readMorphData(d)
+	err = m.ReadMorphData(d)
 	require.NoError(t, err)
 
 	tag, err := m.Tag("ежа")
