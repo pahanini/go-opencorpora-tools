@@ -1,4 +1,4 @@
-module github.com/menshenin/go-opencorpora-tools
+module github.com/pahanini/go-opencorpora-tools
 
 go 1.22.8
 
